@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+  <script src="http://d3js.org/d3.v5.min.js" charset="utf-8"></script>
+  <link rel="stylesheet" href="Dashboard.css">
+</head>
+<body>
+
+  <!-- sidebar -->
+  <div id="info">
+   <div id="title">
+    Seattle Income and K-12 School Locations
+   </div>
+    <div id="count" class="card">
+     <h3 id="desc"> Census Tract:</h3>
+     <h3 id="county-count"> </h3>
+    </div>
+    <div id="pie-chart"></div>
+    <div id="footer">
+      <p>This dashboard provides a detailed view of the educational and economic landscape in Seattle, Washington, by highlighting
+         the distribution of public and private schools alongside income data across census tracts. It visualizes the proportion of 
+         public to private schools within each tract while also showcasing their presence and spatial distribution. By integrating 
+         income data, the dashboard offers insights into potential correlations between school types and the economic characteristics
+         of different areas.
+      </p>
+      <p id='author'> Parker Raines and Brian Bui</p>
+    </div>
+  </div>
+
+  <!-- mainwindow -->
+  <div id='map'></div>
+  <div class="legend" id="pop-legend">
+      <h4>Income</h4>
+      <div><span style="background-color: #ffffcc"></span>≤ 24000</div>
+      <div><span style="background-color: #a1dab4"></span>≤ 50000</div>
+      <div><span style="background-color: #41b6c4"></span>≤ 75000</div>
+      <div><span style="background-color: #2c7fb8"></span>≤ 100000</div>
+      <div><span style="background-color: #253494"></span>≤ 150000</div>
+      <h4 style="margin-top: 5px;"> School Type</h4>
+      <div><span style="background-color: orange"></span> Public</div>
+      <div><span style="background-color: purple"></span> Private</div>
+  </div>
+
+  <nav id="menu"></nav>
+  <div id="map"></div>
+ 
+  <script>
+  
+   //Main map comes here.       
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoibWFwdXNlcjAzIiwiYSI6ImNtMHpzYTFiZzAyd2cyanBrYWhpYXZsZ3gifQ.paRv0YlSRjmXUZKSMTjGEA';
+        const mymap = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/dark-v11',
+            projection: 'mercator',
+            center: [-122.32070, 47.61360],
+            zoom:10.79
+        });
+
+    function updatePieChart(numPublic, numPrivate, schoolsTotal) {
+        console.log('Updating pie chart with:', numPublic, numPrivate, schoolsTotal);
+        const data = schoolsTotal
+            ? [{label: 'Public', value: numPublic}, {label: 'Private', value: numPrivate}]
+            : [{label: 'No Data', value: 1}]; // Placeholder data if no schools
+
+        const colors = schoolsTotal
+            ? ['#ffaf0f', '#cf10e0']
+            : ['#cccccc']; 
+            
+        // Clear previous chart
+        d3.select('#pie-chart').select('svg').remove();
+
+        // Create SVG and group elements
+        const svg = d3.select('#pie-chart')
+            .append('svg')
+            .attr('width', 300)
+            .attr('height', 300);
+
+        const radius = Math.min(300, 300) / 2;
+        const g = svg.append('g').attr('transform', `translate(${radius},${radius})`);
+
+        // Define pie and arc generators
+        const pie = d3.pie().value(d => d.value);
+        const arc = d3.arc().innerRadius(0).outerRadius(radius);
+
+        // Draw arcs
+        const arcs = g.selectAll('path')
+            .data(pie(data))
+            .enter()
+            .append('path')
+            .attr('d', arc)
+            .attr('fill', (d, i) => colors[i]);
+
+        // Add labels
+        g.selectAll('text')
+            .data(pie(data))
+            .enter()
+            .append('text')
+            .attr('transform', d => `translate(${arc.centroid(d)})`)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '15px')
+            .style('fill', schoolsTotal ? '#000' : '#666') 
+            .text(d => `${d.data.label}: ${d.data.value}`);
+    }
+
+
+        mymap.on('load', () => {
+            mymap.addSource('income', {
+                    type: 'geojson',
+                    data: 'census_tracts_income_schools.geojson'
+
+                    });  
+
+            mymap.addSource('publicschools', {
+                type: 'geojson',
+                data: 'Public_Schools_Seattle.geojson'
+            });
+
+
+            mymap.addSource('privateschools', {
+                type: 'geojson',
+                data: 'data/Private_Schools_Seattle.geojson'
+            });
+
+
+            mymap.addLayer( {
+                    id: 'income-layer',
+                    type: 'fill',
+                    source: 'income',
+                    layout: {
+                        'visibility': 'visible'
+                    },
+                    paint: {
+                    'fill-color':['interpolate',['linear'],['get', 'B19301_per_capita_income_5YALL_B19301_001'],
+                                    24000, '#ffffcc',
+                                    50000, '#a1dab4',
+                                    75000, '#41b6c4',
+                                    100000, '#2c7fb8',
+                                    150000, '#253494'],
+                    'fill-outline-color':'lightgrey'    
+                        }
+                    }); 
+
+            mymap.addLayer( {
+                id: 'public-schools-layer',
+                type: 'circle',
+                source: 'publicschools',
+                layout: {
+                        'visibility': 'visible'
+                    },
+                paint: {
+                        'circle-radius': 6,
+                        'circle-color': "#ffaf0f",
+                        'circle-stroke-width': 1,
+                        'circle-stroke-color': 'white',
+                        'circle-stroke-opacity': 0.6,
+                        'circle-opacity': 0.9
+                    }
+            });
+
+            mymap.addLayer( {
+                id: 'private-schools-layer',
+                type: 'circle',
+                source: 'privateschools',
+                layout: {
+                        'visibility': 'visible'
+                    },
+                paint: {
+                        'circle-radius': 6,
+                        'circle-color': "#cf10e0",
+                        'circle-stroke-width': 1,
+                        'circle-stroke-color': 'white',
+                        'circle-stroke-opacity': 0.6,
+                        'circle-opacity': 0.9
+                    }
+            });  
+        });  
+
+    // Add click event for public schools
+    mymap.on('click', 'public-schools-layer', (event) => {
+        const features = event.features;
+        if (!features || !features.length) return;
+
+        const properties = features[0].properties;
+
+        // Create a popup and set its content
+        new mapboxgl.Popup()
+            .setLngLat(event.lngLat)
+            .setHTML(`
+                <h3 class="popup">Public School</h3>
+                <p class="popup"><strong>Name:</strong> ${properties.school_name || 'N/A'}</p>
+                <p class="popup"><strong>Address:</strong> ${properties.address || 'N/A'}</p>
+                <p class="popup"><strong>Grades:</strong> ${properties.grades || 'N/A'}</p>
+            `)
+            .addTo(mymap);
+    });   
+    
+    mymap.on('click', 'private-schools-layer', (event) => {
+    const features = event.features;
+    if (!features || !features.length) return;
+
+    const properties = features[0].properties;
+
+    // Create a popup and set its content
+    new mapboxgl.Popup()
+        .setLngLat(event.lngLat)
+        .setHTML(`
+            <h3 class="popup">Private School</h3>
+            <p class="popup"><strong>Name:</strong> ${properties.NAME || 'N/A'}</p>
+            <p class="popup"><strong>Address:</strong> ${properties.SCHOOL_STREET_ADDRESS || 'N/A'}</p>
+            <p class="popup"><strong>Profit/Nonprofit:</strong> ${properties.FOR_PROFIT_OR_NON_PROFIT || 'N/A'}</p>
+        `)
+        .addTo(mymap);
+    });
+
+    mymap.on('mouseenter', 'public-schools-layer', () => {
+    mymap.getCanvas().style.cursor = 'pointer';
+    });
+    mymap.on('mouseenter', 'private-schools-layer', () => {
+        mymap.getCanvas().style.cursor = 'pointer';
+    });
+
+    // Reset cursor when not hovering over points
+    mymap.on('mouseleave', 'public-schools-layer', () => {
+        mymap.getCanvas().style.cursor = '';
+    });
+    mymap.on('mouseleave', 'private-schools-layer', () => {
+        mymap.getCanvas().style.cursor = '';
+    });
+
+   // change info window on hover
+   mymap.on('mousemove', (event) => {
+          //identify the layer with mouse event
+          const incomedata = mymap.queryRenderedFeatures(event.point, {
+                layers: ['income-layer']
+              });
+          const per_capita_income = incomedata[0].properties.B19301_per_capita_income_5YALL_B19301_001;
+          const num_public = incomedata[0].properties.NUM_SCHOOLS_PUBLIC
+          const num_private = incomedata[0].properties.NUM_SCHOOLS_PRIVATE
+          const schools_total = incomedata[0].properties.NUM_SCHOOLS_PUBLIC + incomedata[0].properties.NUM_SCHOOLS_PRIVATE
+
+          //Construct HTML DOM to diplay county name at <div id = 'desc'>
+            document.getElementById('desc').innerHTML = incomedata.length
+                ? `<h3>${incomedata[0].properties.GEN_ALIAS}, ${incomedata[0].properties.NAME} </h3>`
+                : `<h3>Hover over a census tract</h3>`;
+
+
+          //Construct HTML DOM to display population at <div id='county-count>'  
+            document.getElementById('county-count').innerHTML = incomedata.length
+                ? `<h3 class="dataline1 label">⠀Income Per Capita: </h3> <h3 class="dataline1 data"> ${per_capita_income}</h3>
+                    <h3 class="dataline2 label">⠀Total Schools in Tract: </h3> <h3 class="dataline2 data"> ${num_public + num_private}</h3>
+                    <h3 class="dataline1 label">⠀Public Schools in Tract: </h3> <h3 class="dataline1 data"> ${num_public}</h3>
+                    <h3 class="dataline2 label">⠀Private Schools in Tract: </h3> <h3 class="dataline2 data"> ${num_private}</h3>
+                    <h3 class="dataline1 label">⠀Percent Public Schools: </h3> <h3 class="dataline1 data"> ${schools_total ? ((num_public / schools_total) * 100).toFixed(0) : '0'}%`
+                : `<h3 class="dataline1 label">⠀Income Per Capita: </h3> <h3 class="dataline1 data"> </h3>
+                    <h3 class="dataline2 label">⠀Total Schools in Tract: </h3> <h3 class="dataline2 data"> </h3>
+                    <h3 class="dataline1 label">⠀Public Schools in Tract: </h3> <h3 class="dataline1 data"> </h3>
+                    <h3 class="dataline2 label">⠀Private Schools in Tract: </h3> <h3 class="dataline2 data"> </h3>
+                    <h3 class="dataline1 label">⠀Public to Private Ratio: </h3> <h3 class="dataline1 data"> </h3>`;
+            
+            if (incomedata.length) {
+              const publicSchools = incomedata[0].properties.NUM_SCHOOLS_PUBLIC || 0;
+              const privateSchools = incomedata[0].properties.NUM_SCHOOLS_PRIVATE || 0;
+              const schoolsTotal = publicSchools + privateSchools;
+              updatePieChart(publicSchools, privateSchools, schoolsTotal);
+                } else {
+                    updatePieChart(0, 0, 0); 
+                }
+          });
+
+
+        mymap.on('idle', () => {
+    console.log("Map is idle, checking layers and setting up toggles.");
+
+    // Ensure layers are loaded
+    if (!mymap.getLayer('income-layer') || !mymap.getLayer('public-schools-layer') || !mymap.getLayer('private-schools-layer')) {
+        console.error("One or more required layers are missing.");
+        return;
+    }
+
+    // Enumerate IDs of the layers
+    const toggleableLayerIds = ['income-layer', 'public-schools-layer', 'private-schools-layer'];
+
+    // Set up toggle buttons
+    for (const id of toggleableLayerIds) {
+        if (document.getElementById(id)) {
+            console.log(`Link for layer ${id} already exists.`);
+            continue; // Skip if link already exists
+        }
+
+        const link = document.createElement('a');
+        link.id = id;
+        link.href = '#';
+        link.textContent = id;
+        link.className = 'active';
+
+        // Toggle visibility on click
+        link.onclick = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const visibility = mymap.getLayoutProperty(id, 'visibility');
+            if (visibility === 'visible') {
+                mymap.setLayoutProperty(id, 'visibility', 'none');
+                this.className = '';
+            } else {
+                mymap.setLayoutProperty(id, 'visibility', 'visible');
+                this.className = 'active';
+            }
+        };
+
+        const layersMenu = document.getElementById('menu');
+        if (!layersMenu) {
+            console.error("Menu element with ID 'menu' not found.");
+            return;
+        }
+
+        layersMenu.appendChild(link);
+        console.log(`Link added for layer: ${id}`);
+    }
+});
+  </script>
+</body>
+</html>

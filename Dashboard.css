@@ -1,0 +1,248 @@
+* {
+  box-sizing: border-box;
+  }
+  html, body {
+    width: 100vw;
+    height: 100%;
+    margin: 0;
+    float: left;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  #map {
+    width: 66.66%;
+    height: 100vh;
+    right: 0;
+    float: right;  
+    padding: 40px 15px 900px 15px;
+    font-family: 'Titillium Web', serif;
+  }
+  #info {
+    height: 100vh;
+    z-index: 1000;
+    position: absolute;
+    width: 33.33%;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    padding: 40px 15px 900px 0px;
+    background: #343a40;
+    color: white;
+    border: 1px solid grey;
+  }
+  
+  @media only screen and (max-width: 1026px) {
+  #info, {
+    visibility: hidden !important;
+  }
+  }
+  
+  #info a {
+  color: lightgray;
+  }
+  
+  #info a:hover {
+  color: white;
+  opacity: 0.3;
+  }
+  
+  #info h4 i {
+  font-size: 1.25e;
+  padding-right: 10px
+  }
+  
+  #title {
+  font-size: 25px;
+  font-family: 'Oswald', sans-serif;
+  position: relative;
+  max-width: fit-content;
+  text-align: center;
+  margin-inline: auto;
+  }
+  
+  /* social media icons */
+  #title span {
+  font-size: 14px;
+  float: right;
+  margin-right: 10px;
+  }
+  
+  #placename {
+  font-size: 40px;
+  font-family: 'Oswald', sans-serif;
+  }
+  
+  /* card decks */
+  #desc {
+  text-align: center;
+  color: lightgray;
+  font-size: medium;
+  font-weight: bold;
+  }
+  
+  #county-count {
+  width: 100%;
+  text-align: left;
+  position: absolute;
+  color: rgb(150, 214, 137);
+  font-size: medium;
+  }
+  
+  #footer {
+  background-color: #303030;
+  position: absolute;
+  bottom: 0%;
+  left: 0px;
+  padding: 20px;
+  font-size: 14px;
+  line-height: 150%;
+  color: lightgray;
+  }
+  
+  .dataline1{
+    margin-top: 1px;
+    margin-bottom: 1px;
+    margin-block-end: 0px;
+    margin-block-start: 0px;
+    background-color: #4c565f;
+  }
+  
+  
+  
+  .dataline2 {
+    margin-top: 1px;
+    margin-bottom: 1px;
+    margin-block-end: 0px;
+    margin-block-start: 0px;
+    background-color: #343a40;
+  }
+  
+  .label {
+    float: left;
+    width: 50%;
+    height: 25px;
+  }
+  
+  .data{
+    float: right;
+    width: 50%;
+    height: 25px;
+    font-weight: normal;
+  }
+  
+  .line {
+      fill: none;
+      stroke-width: 3;
+  }
+  
+  h2.year {
+    margin: 10px 0px 0px 0px;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: lightgray;
+  }
+  .legend {
+    background-color: #c9c9c9;
+    border-radius: 3px;
+    top: 20px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font:
+        12px/20px 'Helvetica Neue',
+        Arial,
+        Helvetica,
+        sans-serif;
+    padding: 10px;
+    position: fixed;
+    right: 20px;
+    z-index: 1;
+  }
+  
+  .legend h4 {
+    margin: 0 0 5px;
+  }
+  
+  .legend div span {
+    border-radius: 50%;
+    display: inline-block;
+    height: 10px;
+    margin-right: 5px;
+    width: 10px;
+  }
+  
+  .tooltip {
+    position: absolute;
+    top: 0;
+    height: 100px;
+    margin-top: 20px;
+    width: 250px;
+    bottom: 0;
+    right: 0;
+    background: #fff;
+    margin-right: 20px;
+    font-family: Arial, sans-serif;
+    overflow: auto;
+    border-radius: 3px;
+    z-index: 1;
+  }
+  
+  #menu {
+    background: #fff;
+    position: fixed;
+    z-index: 1;
+    top: 250px;
+    right: 10px;
+    border-radius: 3px;
+    width: 120px;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    font-family: 'Open Sans', sans-serif;
+  }
+  
+  #menu a {
+    font-size: 13px;
+    color: #000000;
+    display: block;
+    margin: 0;
+    padding: 0;
+    padding: 5px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+    text-align: center;
+  }
+  
+  #menu a:last-child {
+    border: none;
+  }
+  
+  #menu a:hover {
+    background-color: #c4c4c4;
+    color: #404040;
+  }
+  
+  #menu a.active {
+    background-color: #c9c9c9;
+    color: #000000;
+    font-weight: bold;
+  }
+  
+  #menu a.active:hover {
+    background: #c4c4c4;
+  }
+  
+  #pie-chart{
+    position: absolute;
+    top: 335px; 
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 500;
+  }
+  
+  #author{
+    max-width: fit-content;
+    margin-inline: auto;
+    margin-bottom: 0px;
+  }
+
+  .popup{
+    font-family: 'Segoe UI', sans-serif;
+  }
